@@ -18,12 +18,16 @@ import {
   IonTitle,
   IonToolbar,
   useIonAlert,
+  useIonToast,
 } from '@ionic/react'
 import { Storage } from '@capacitor/storage'
 import { useState } from 'react'
 import { useRecoilState, useResetRecoilState } from 'recoil'
 import milkAtom from 'src/recoil/milk'
 import styled from 'styled-components'
+import { writeUserData } from 'src/utils/firebase'
+import { format } from 'date-fns'
+import { useHistory } from 'react-router-dom'
 
 // import './milk.css';
 
@@ -33,6 +37,9 @@ const Milk: React.FC = () => {
   const [isEnd, setEndStatus] = useState(false)
   const [milkValue, setMilkValue] = useState<number | null>(null)
   const [present] = useIonAlert()
+  const [toastPresent, dismiss] = useIonToast()
+  const history = useHistory()
+  // const firebaseObj = useFirebase()
 
   const stateInit = (): void => {
     setEndStatus(false)
@@ -72,7 +79,29 @@ const Milk: React.FC = () => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onModifyendDate = (e: any): void => {
+  const onModifyStartDate = (e: any): void => {
+    let startDate = new Date(e.detail.value) ?? new Date()
+    const endDate = milkState.endDate
+
+    if (startDate && endDate && startDate > endDate) {
+      alert(
+        `분유 먹기 종료 시간은 ${endDate.getHours()}시 ${endDate.getMinutes()}분 입니다.\n종료 시간 이전으로 시작시간을 설정해 주세요.`,
+      )
+      startDate = milkState.startDate || new Date()
+    }
+
+    if (endDate) {
+      setMilkState({
+        ...milkState,
+        startDate,
+        duration: Math.round((endDate.getTime() - startDate.getTime()) / 1000),
+      })
+      setEndStatus(true)
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onModifyEndDate = (e: any): void => {
     let endDate = new Date(e.detail.value) ?? new Date()
     const startDate = milkState.startDate
 
@@ -104,20 +133,36 @@ const Milk: React.FC = () => {
   const onSave = async (): Promise<void> => {
     // await Storage.clear()
     const { value } = await Storage.get({ key: 'userData' })
-    console.log(value)
 
     const _value = value ? JSON.parse(value) : []
     const newData = { ...milkState, amount: milkValue }
     _value.push(newData)
-    await Storage.set({
-      key: 'userData',
-      value: JSON.stringify(_value),
+    // await Storage.set({
+    //   key: 'userData',
+    //   value: JSON.stringify(_value),
+    // })
+    const start = milkState.startDate
+    writeUserData(newData)
+    toastPresent({
+      buttons: [
+        {
+          text: '보기',
+          handler: () => {
+            dismiss()
+            history.push('/main')
+          },
+        },
+      ],
+      message: `🍼 ${format(start ? new Date(start) : new Date(), 'HH:mm')}시 부터 ${Math.ceil(
+        milkState.duration ? milkState.duration / 60 : 0,
+      )}분 동안 ${milkValue}ml 섭취`,
+      color: 'dark',
+      duration: 10000,
     })
 
-    console.log(value, _value)
-    console.log('[저장]', milkState.startDate, milkState.endDate, `${milkState.duration} 초`)
     stateInit()
   }
+
   return (
     <IonPage>
       <IonHeader>
@@ -175,7 +220,7 @@ const Milk: React.FC = () => {
                     display-format='h:mm A'
                     picker-format='h:mm A'
                     value={milkState.startDate?.toISOString()}
-                    onIonChange={onModifyendDate}
+                    onIonChange={onModifyStartDate}
                   ></IonDatetime>
                 </IonItem>
                 <IonItem>
@@ -184,7 +229,7 @@ const Milk: React.FC = () => {
                     display-format='h:mm A'
                     picker-format='h:mm A'
                     value={milkState.endDate?.toISOString() ?? new Date().toISOString()}
-                    onIonChange={onModifyendDate}
+                    onIonChange={onModifyEndDate}
                   ></IonDatetime>
                 </IonItem>
                 <IonItem>
@@ -201,18 +246,36 @@ const Milk: React.FC = () => {
                 <IonGrid>
                   <IonRow>
                     <IonCol>
-                      <IonButton size='small' shape='round' color='light' onClick={onAddMilk(30)}>
-                        + 30
+                      <IonButton
+                        className='plus-button'
+                        size='small'
+                        shape='round'
+                        color='light'
+                        onClick={onAddMilk(30)}
+                      >
+                        + 30ml
                       </IonButton>
                     </IonCol>
                     <IonCol>
-                      <IonButton size='small' shape='round' color='light' onClick={onAddMilk(60)}>
-                        + 60
+                      <IonButton
+                        className='plus-button'
+                        size='small'
+                        shape='round'
+                        color='light'
+                        onClick={onAddMilk(60)}
+                      >
+                        + 60ml
                       </IonButton>
                     </IonCol>
                     <IonCol>
-                      <IonButton size='small' shape='round' color='light' onClick={onAddMilk(90)}>
-                        + 90
+                      <IonButton
+                        className='plus-button'
+                        size='small'
+                        shape='round'
+                        color='light'
+                        onClick={onAddMilk(90)}
+                      >
+                        + 90ml
                       </IonButton>
                     </IonCol>
                   </IonRow>
@@ -248,8 +311,6 @@ const Milk: React.FC = () => {
             </IonCardContent>
           </IonCard>
         )}
-
-        {/* <ExploreContainer name='Tab 1 page' /> */}
       </IonContent>
     </IonPage>
   )
@@ -277,14 +338,21 @@ const StyledContainer = styled.div`
 const StyleHistoryWriting = styled.div`
   .amount-input {
     text-align: right;
+    input {
+      padding-right: 10px;
+    }
     &::after {
       content: ' ml';
-      padding-right: 10px;
     }
   }
 
   .width100 {
     width: 100%;
+  }
+
+  .plus-button {
+    width: 100%;
+    height: 40px;
   }
 `
 

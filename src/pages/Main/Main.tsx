@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Storage } from '@capacitor/storage'
+// import { Storage } from '@capacitor/storage'
 import {
   IonCard,
   IonCardContent,
@@ -20,11 +20,15 @@ import {
   IonToolbar,
   useIonViewWillEnter,
 } from '@ionic/react'
+import ko from 'date-fns/locale/ko'
+import { formatDistance } from 'date-fns'
 
 import { useEffect, useMemo, useState } from 'react'
+import { readUserDate } from 'src/utils/firebase'
 import styled from 'styled-components'
 
 import './main.css'
+import { Link } from 'react-router-dom'
 
 const Main: React.FC = () => {
   const [userData, setUserData] = useState<
@@ -50,6 +54,8 @@ const Main: React.FC = () => {
   //   }
   //   setEndDate(end)
   // }
+
+  // console.log(firebase)
   const sortedData = useMemo(() => {
     return userData
       .filter(item => {
@@ -64,8 +70,9 @@ const Main: React.FC = () => {
   }, [startDate, userData])
 
   const getUserData = async (): Promise<void> => {
-    const { value } = await Storage.get({ key: 'userData' })
-    setUserData(value ? JSON.parse(value) : [])
+    // const { value } = await Storage.get({ key: 'userData' })
+    const list = await readUserDate()
+    setUserData(list)
   }
 
   useIonViewWillEnter(() => {
@@ -75,13 +82,13 @@ const Main: React.FC = () => {
 
   return (
     <IonPage>
-      <StyledContainer>
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>통계</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent fullscreen>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>통계</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent fullscreen>
+        <StyledContainer>
           <IonItemDivider>
             <IonLabel>날짜를 선택 해주세요</IonLabel>
           </IonItemDivider>
@@ -154,32 +161,48 @@ const Main: React.FC = () => {
                     </StyledColumn>
                     <StyledColumn>
                       <IonText color='dark'>
-                        <h4>양(ml)</h4>
+                        <h4>분유량</h4>
                       </IonText>
                     </StyledColumn>
                   </StyledRow>
                 </StyledHead>
                 {sortedData?.map((item, i) => {
                   return (
-                    <StyledRow key={i.toString()}>
-                      <StyledColumn>
-                        {new Date(item.startDate).getHours()}시{' '}
-                        {new Date(item.startDate).getMinutes()}분
-                      </StyledColumn>
-                      <StyledColumn>{Math.ceil(item.duration / 60)} 분</StyledColumn>
-                      <StyledColumn>{item.amount}</StyledColumn>
-                    </StyledRow>
+                    <>
+                      <StyledRow key={i.toString()}>
+                        <StyledColumn>
+                          {new Date(item.startDate).getHours()}시{' '}
+                          {new Date(item.startDate).getMinutes()}분
+                        </StyledColumn>
+                        <StyledColumn>{Math.ceil(item.duration / 60)} 분</StyledColumn>
+                        <StyledColumn>{item.amount} ml</StyledColumn>
+                      </StyledRow>
+                      {i !== sortedData.length - 1 && (
+                        <StyledDistance>
+                          {formatDistance(
+                            new Date(item.startDate),
+                            new Date(sortedData[i + 1].startDate),
+                            {
+                              locale: ko,
+                            },
+                          )}
+                        </StyledDistance>
+                      )}
+                    </>
                   )
                 })}
               </StyledTable>
             </>
           ) : (
             <IonText className='padding-text' color='dark'>
-              <h5>해당 날짜에 기록이 없어요</h5>
+              <div>
+                <h5>해당 날짜에 기록이 없어요</h5>
+                <Link to='/milk'>기록 하러 가기!⭐️</Link>
+              </div>
             </IonText>
           )}
-        </IonContent>
-      </StyledContainer>
+        </StyledContainer>
+      </IonContent>
     </IonPage>
   )
 }
@@ -193,7 +216,7 @@ const StyledContainer = styled.div`
     }
   }
   .padding-text {
-    h5 {
+    div {
       text-align: center;
       position: absolute;
       left: 0;
@@ -217,6 +240,12 @@ const StyledRow = styled.div`
 
 const StyledColumn = styled.div`
   flex: 1;
+  text-align: center;
+`
+
+const StyledDistance = styled.div`
+  color: #e0a3a3;
+  padding: 0 20px;
   text-align: center;
 `
 

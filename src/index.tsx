@@ -4,6 +4,9 @@ import App from './App'
 import * as serviceWorkerRegistration from './serviceWorkerRegistration'
 import reportWebVitals from './reportWebVitals'
 
+import dotenv from 'dotenv'
+dotenv.config()
+
 ReactDOM.render(
   <React.StrictMode>
     <App />
