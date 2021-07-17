@@ -25,13 +25,14 @@ import { formatDistance } from 'date-fns'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { readUserDate } from 'src/utils/firebase'
 import styled from 'styled-components'
-import userAtom from 'src/recoil/user'
+import userAtom, { userSelector } from 'src/recoil/user'
 
 import './main.css'
 import { Link } from 'react-router-dom'
 import { useRecoilValue } from 'recoil'
 
 const Main: React.FC = () => {
+  const userName = useRecoilValue(userSelector.getUserName)
   const [userData, setUserData] = useState<
     { startDate: Date; endDate: Date; duration: number; amount: number }[]
   >([])
@@ -57,7 +58,6 @@ const Main: React.FC = () => {
   //   setEndDate(end)
   // }
 
-  // console.log(firebase)
   const sortedData = useMemo(() => {
     return userData
       .filter(item => {
@@ -121,7 +121,9 @@ const Main: React.FC = () => {
             <>
               <IonCard>
                 <IonCardHeader>
-                  <IonCardSubtitle>일일 기록표 입니다.</IonCardSubtitle>
+                  <IonCardSubtitle>
+                    <span className='user-name'>{userName}</span> 아기의 일일 기록표 입니다.
+                  </IonCardSubtitle>
                   <IonCardTitle>대시보드</IonCardTitle>
                 </IonCardHeader>
                 <IonCardContent>
@@ -225,6 +227,10 @@ const StyledContainer = styled.div`
       top: 50%;
       transform: translateY(-50%);
     }
+  }
+
+  .user-name {
+    text-decoration: underline;
   }
 `
 

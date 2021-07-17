@@ -21,33 +21,29 @@ import {
   useIonToast,
 } from '@ionic/react'
 import { useState } from 'react'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState, useRecoilValue, useResetRecoilState } from 'recoil'
 import milkAtom from 'src/recoil/milk'
 import userAtom from 'src/recoil/user'
 import styled from 'styled-components'
 import { writeUserData } from 'src/utils/firebase'
 import { format } from 'date-fns'
 import { useHistory } from 'react-router-dom'
-import { userSelector } from 'src/recoil/user'
-
-// import './milk.css';
 
 const Milk: React.FC = () => {
   const [milkState, setMilkState] = useRecoilState(milkAtom)
   const userState = useRecoilValue(userAtom)
-  const userName = useRecoilValue(userSelector.getUserName)
   const [isEnd, setEndStatus] = useState(false)
   const [milkValue, setMilkValue] = useState<number | null>(null)
   const [present] = useIonAlert()
   const [toastPresent, dismiss] = useIonToast()
   const history = useHistory()
+  const milkStateReset = useResetRecoilState(milkAtom)
 
   const stateInit = (): void => {
+    milkStateReset()
     setEndStatus(false)
     setMilkValue(null)
   }
-
-  console.log('userName: ', userName)
 
   const onStartEat = (): void => {
     stateInit()
@@ -177,7 +173,7 @@ const Milk: React.FC = () => {
                       onClick={onStartEat}
                       disabled={!!milkState.startDate}
                     >
-                      시작 🍼
+                      분유 기록 시작 🍼
                     </IonButton>
                   </IonCol>
                 ) : (
@@ -189,7 +185,7 @@ const Milk: React.FC = () => {
                       color='success'
                       onClick={onEndEat}
                     >
-                      종료
+                      분유 기록 종료
                     </IonButton>
                   </IonCol>
                 )}
