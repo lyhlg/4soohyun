@@ -21,30 +21,33 @@ import {
   useIonToast,
 } from '@ionic/react'
 import { useState } from 'react'
-import { useRecoilState, useResetRecoilState } from 'recoil'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import milkAtom from 'src/recoil/milk'
+import userAtom from 'src/recoil/user'
 import styled from 'styled-components'
 import { writeUserData } from 'src/utils/firebase'
 import { format } from 'date-fns'
 import { useHistory } from 'react-router-dom'
+import { userSelector } from 'src/recoil/user'
 
 // import './milk.css';
 
 const Milk: React.FC = () => {
   const [milkState, setMilkState] = useRecoilState(milkAtom)
-  const resetMilkAtom = useResetRecoilState(milkAtom)
+  const userState = useRecoilValue(userAtom)
+  const userName = useRecoilValue(userSelector.getUserName)
   const [isEnd, setEndStatus] = useState(false)
   const [milkValue, setMilkValue] = useState<number | null>(null)
   const [present] = useIonAlert()
   const [toastPresent, dismiss] = useIonToast()
   const history = useHistory()
-  // const firebaseObj = useFirebase()
 
   const stateInit = (): void => {
     setEndStatus(false)
-    resetMilkAtom()
     setMilkValue(null)
   }
+
+  console.log('userName: ', userName)
 
   const onStartEat = (): void => {
     stateInit()
@@ -132,7 +135,7 @@ const Milk: React.FC = () => {
   const onSave = async (): Promise<void> => {
     const newData = { ...milkState, amount: milkValue }
     const start = milkState.startDate
-    writeUserData(newData)
+    writeUserData(userState.userId, newData)
     toastPresent({
       buttons: [
         {

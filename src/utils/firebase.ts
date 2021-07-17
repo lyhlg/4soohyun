@@ -10,8 +10,11 @@ interface UserItem {
   amount: number | null
 }
 
-export const writeUserData = ({ startDate, endDate, duration, amount }: UserItem): void => {
-  database.ref('users/' + 'soohyun').push({
+export const writeUserData = (
+  userKey: string,
+  { startDate, endDate, duration, amount }: UserItem,
+): void => {
+  database.ref(`users/${userKey}`).push({
     startDate: startDate ? startDate.toISOString() : new Date().toISOString(),
     endDate: endDate ? endDate.toISOString() : new Date().toISOString(),
     duration,
@@ -19,11 +22,11 @@ export const writeUserData = ({ startDate, endDate, duration, amount }: UserItem
   })
 }
 
-export const readUserDate = async (): Promise<any> => {
+export const readUserDate = async (userKey: string): Promise<any> => {
   return await database
     .ref()
     .child('users')
-    .child('soohyun')
+    .child(userKey)
     .get()
     .then(snapshot => {
       if (snapshot.exists()) {

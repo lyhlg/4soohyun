@@ -25,14 +25,17 @@ import { formatDistance } from 'date-fns'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { readUserDate } from 'src/utils/firebase'
 import styled from 'styled-components'
+import userAtom from 'src/recoil/user'
 
 import './main.css'
 import { Link } from 'react-router-dom'
+import { useRecoilValue } from 'recoil'
 
 const Main: React.FC = () => {
   const [userData, setUserData] = useState<
     { startDate: Date; endDate: Date; duration: number; amount: number }[]
   >([])
+  const userState = useRecoilValue(userAtom)
 
   const [startDate, setStartDate] = useState(new Date().toISOString())
   // const [endDate, setEndDate] = useState(new Date().toISOString())
@@ -69,7 +72,7 @@ const Main: React.FC = () => {
   }, [startDate, userData])
 
   const getUserData = async (): Promise<void> => {
-    const list = await readUserDate()
+    const list = await readUserDate(userState.userId)
     setUserData(list)
   }
 
