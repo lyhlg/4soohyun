@@ -20,7 +20,6 @@ import {
   useIonAlert,
   useIonToast,
 } from '@ionic/react'
-import { Storage } from '@capacitor/storage'
 import { useState } from 'react'
 import { useRecoilState, useResetRecoilState } from 'recoil'
 import milkAtom from 'src/recoil/milk'
@@ -131,16 +130,7 @@ const Milk: React.FC = () => {
   }
 
   const onSave = async (): Promise<void> => {
-    // await Storage.clear()
-    const { value } = await Storage.get({ key: 'userData' })
-
-    const _value = value ? JSON.parse(value) : []
     const newData = { ...milkState, amount: milkValue }
-    _value.push(newData)
-    // await Storage.set({
-    //   key: 'userData',
-    //   value: JSON.stringify(_value),
-    // })
     const start = milkState.startDate
     writeUserData(newData)
     toastPresent({

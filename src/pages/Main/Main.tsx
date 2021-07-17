@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// import { Storage } from '@capacitor/storage'
 import {
   IonCard,
   IonCardContent,
@@ -23,7 +22,7 @@ import {
 import ko from 'date-fns/locale/ko'
 import { formatDistance } from 'date-fns'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { readUserDate } from 'src/utils/firebase'
 import styled from 'styled-components'
 
@@ -70,7 +69,6 @@ const Main: React.FC = () => {
   }, [startDate, userData])
 
   const getUserData = async (): Promise<void> => {
-    // const { value } = await Storage.get({ key: 'userData' })
     const list = await readUserDate()
     setUserData(list)
   }
@@ -168,8 +166,8 @@ const Main: React.FC = () => {
                 </StyledHead>
                 {sortedData?.map((item, i) => {
                   return (
-                    <>
-                      <StyledRow key={i.toString()}>
+                    <Fragment key={i.toString()}>
+                      <StyledRow>
                         <StyledColumn>
                           {new Date(item.startDate).getHours()}시{' '}
                           {new Date(item.startDate).getMinutes()}분
@@ -188,7 +186,7 @@ const Main: React.FC = () => {
                           )}
                         </StyledDistance>
                       )}
-                    </>
+                    </Fragment>
                   )
                 })}
               </StyledTable>
