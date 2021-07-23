@@ -14,8 +14,8 @@ import {
   useIonAlert,
 } from '@ionic/react'
 import { IonReactRouter } from '@ionic/react-router'
-import { speedometerOutline, waterOutline } from 'ionicons/icons' //medalOutline
-import { Main, Milk, Peepoo } from './pages'
+import { barChartOutline, speedometerOutline, waterOutline } from 'ionicons/icons' //medalOutline
+import { Chart, Main, Milk, Peepoo } from './pages'
 import { encode } from 'js-base64'
 import userAtom from 'src/recoil/user'
 
@@ -117,11 +117,18 @@ const App: React.FC = () => {
               <Route exact path='/peepoo'>
                 <Peepoo />
               </Route>
+              <Route exact path='/chart'>
+                <Chart />
+              </Route>
               <Route exact path='/'>
                 <Redirect to='/main' />
               </Route>
             </IonRouterOutlet>
             <IonTabBar slot='bottom'>
+              <IonTabButton tab='chart' href='/chart'>
+                <IonIcon icon={barChartOutline} />
+                <IonLabel>통계</IonLabel>
+              </IonTabButton>
               <IonTabButton tab='main' href='/main'>
                 <IonIcon icon={speedometerOutline} />
                 <IonLabel>대시보드</IonLabel>
