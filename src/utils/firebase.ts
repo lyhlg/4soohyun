@@ -10,15 +10,30 @@ interface UserItem {
   amount: number | null
 }
 
+interface UserItemV2 {
+  startDate: number
+  endDate: number
+  duration: number
+  amount: number
+}
+
 export const writeUserData = (
   userKey: string,
   { startDate, endDate, duration, amount }: UserItem,
 ): void => {
   database.ref(`users/${userKey}`).push({
-    startDate: startDate ? startDate.toISOString() : new Date().toISOString(),
-    endDate: endDate ? endDate.toISOString() : new Date().toISOString(),
+    startDate: startDate
+      ? Date.parse(startDate.toISOString())
+      : Date.parse(new Date().toISOString()),
+    endDate: endDate ? Date.parse(endDate.toISOString()) : Date.parse(new Date().toISOString()),
     duration,
     amount,
+  })
+}
+
+export const updateUserData = (userKey: string, targetKey: string, newData: UserItemV2): void => {
+  database.ref(`users/${userKey}`).update({
+    [targetKey]: newData,
   })
 }
 
@@ -31,9 +46,16 @@ export const readUserDate = async (userKey: string): Promise<any> => {
     .then(snapshot => {
       if (snapshot.exists()) {
         const obj = snapshot.val()
-        return Object.keys(obj).map(item => obj[item])
+        return Object.keys(obj).map(item => ({
+          ...obj[item],
+          key: item,
+        }))
       } else {
         return []
       }
     })
+}
+
+export const removeUserDate = async (userKey: string, targetKey: string): Promise<any> => {
+  await database.ref(`users/${userKey}`).child(targetKey).remove()
 }

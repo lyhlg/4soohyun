@@ -8,35 +8,60 @@ import {
   IonContent,
   IonDatetime,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
-  IonItemDivider,
+  IonItemOption,
+  IonItemOptions,
+  IonItemSliding,
   IonLabel,
   // IonItemDivider,
   IonPage,
   IonText,
   IonTitle,
   IonToolbar,
+  useIonAlert,
   useIonViewWillEnter,
+  useIonModal,
 } from '@ionic/react'
 import ko from 'date-fns/locale/ko'
-import { formatDistance } from 'date-fns'
+import { format, formatDistance } from 'date-fns'
 
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { readUserDate } from 'src/utils/firebase'
+import { readUserDate, removeUserDate, updateUserData } from 'src/utils/firebase'
 import styled from 'styled-components'
 import userAtom, { userSelector } from 'src/recoil/user'
 
 import './main.css'
 import { Link } from 'react-router-dom'
 import { useRecoilValue } from 'recoil'
+import { createOutline, trashOutline } from 'ionicons/icons'
+import { RecordMilk } from 'src/components'
 
 const Main: React.FC = () => {
   const userName = useRecoilValue(userSelector.getUserName)
   const [userData, setUserData] = useState<
-    { startDate: Date; endDate: Date; duration: number; amount: number }[]
+    { startDate: number; endDate: number; duration: number; amount: number; key: string }[]
   >([])
+  const [userTmpDataBaseOnKey, setUserTmpData] = useState<any>(null)
+  const [userTmpKey, setUserTmpKey] = useState<any>('')
   const userState = useRecoilValue(userAtom)
+  const handleDismiss = (): void => {
+    modalDismiss()
+  }
+  const [present] = useIonAlert()
+  const [modalPresent, modalDismiss] = useIonModal(RecordMilk, {
+    // startDate: userD
+    onDismiss: handleDismiss,
+    startDate: userTmpDataBaseOnKey?.startDate,
+    endDate: userTmpDataBaseOnKey?.endDate,
+    amount: userTmpDataBaseOnKey?.amount,
+    onSave: (props: { startDate: number; endDate: number; amount: number; duration: number }) => {
+      updateUserData(userState.userId, userTmpKey, props)
+      handleDismiss()
+      getUserData()
+    },
+  })
 
   const [startDate, setStartDate] = useState(new Date().toISOString())
   // const [endDate, setEndDate] = useState(new Date().toISOString())
@@ -59,13 +84,16 @@ const Main: React.FC = () => {
   // }
 
   const sortedData = useMemo(() => {
+    const start = new Date(startDate)
+    start.setUTCHours(-9, 0, 0, 0)
+    const end = new Date(startDate)
+    end.setUTCHours(14, 59, 59, 999)
+
     return userData
       .filter(item => {
-        const selectedMonth = new Date(startDate).getMonth()
-        const selectedDate = new Date(startDate).getDate()
         return (
-          new Date(item.startDate).getMonth() === selectedMonth &&
-          new Date(item.startDate).getDate() === selectedDate
+          Date.parse(start.toISOString()) < item.startDate &&
+          item.startDate < Date.parse(end.toISOString())
         )
       })
       .reverse()
@@ -74,6 +102,31 @@ const Main: React.FC = () => {
   const getUserData = async (): Promise<void> => {
     const list = await readUserDate(userState.userId)
     setUserData(list)
+  }
+
+  const onEdit = (key: string) => () => {
+    const data = userData.find(item => item.key === key)
+    if (data) {
+      setUserTmpData(data)
+      setUserTmpKey(key)
+      modalPresent()
+    }
+  }
+  const onDelete = (key: string) => () => {
+    present({
+      header: '해당 기록을 삭제하시겠습니까?',
+      message: '확인을 누르시면, 해당 기록지가 삭제됩니다.',
+      buttons: [
+        '취소하기',
+        {
+          text: '삭제하기',
+          handler: () => {
+            removeUserDate(userState.userId, key)
+            setTimeout(getUserData, 2000)
+          },
+        },
+      ],
+    })
   }
 
   useIonViewWillEnter(() => {
@@ -85,15 +138,11 @@ const Main: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>통계</IonTitle>
+          <IonTitle>대시보드</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
         <StyledContainer>
-          <IonItemDivider>
-            <IonLabel>날짜를 선택 해주세요</IonLabel>
-          </IonItemDivider>
-
           <IonItem>
             <IonLabel>날짜</IonLabel>
             <IonDatetime
@@ -169,29 +218,77 @@ const Main: React.FC = () => {
                     </StyledColumn>
                   </StyledRow>
                 </StyledHead>
+
+                {/* <IonItemSliding>
+                  <IonItem>
+                    <IonLabel>Sliding Item, Icons End</IonLabel>
+                  </IonItem>
+                  <IonItemOptions>
+                    <IonItemOption color='primary'>
+                      <IonIcon slot='end' icon={createOutline}></IonIcon>
+                      수정
+                    </IonItemOption>
+                    <IonItemOption color='danger'>
+                      <IonIcon slot='end' icon={trashOutline} />
+                      삭제
+                    </IonItemOption>
+                  </IonItemOptions>
+                </IonItemSliding> */}
                 {sortedData?.map((item, i) => {
                   return (
                     <Fragment key={i.toString()}>
-                      <StyledRow>
-                        <StyledColumn>
-                          {new Date(item.startDate).getHours()}시{' '}
-                          {new Date(item.startDate).getMinutes()}분
-                        </StyledColumn>
-                        <StyledColumn>{Math.ceil(item.duration / 60)} 분</StyledColumn>
-                        <StyledColumn>{item.amount} ml</StyledColumn>
-                      </StyledRow>
-                      {i !== sortedData.length - 1 && (
-                        <StyledDistance>
-                          {formatDistance(
-                            new Date(item.startDate),
-                            new Date(sortedData[i + 1].startDate),
-                            {
-                              locale: ko,
-                            },
-                          )}
-                        </StyledDistance>
-                      )}
+                      <IonItemSliding>
+                        <IonItem>
+                          <StyledRow>
+                            <StyledColumn>{format(new Date(item.startDate), 'HH:mm')}</StyledColumn>
+                            <StyledColumn>{Math.ceil(item.duration / 60)} 분</StyledColumn>
+                            <StyledColumn>{item.amount} ml</StyledColumn>
+                          </StyledRow>
+                        </IonItem>
+                        <IonItemOptions>
+                          <IonItemOption color='primary' onClick={onEdit(item.key)}>
+                            <IonIcon slot='end' icon={createOutline}></IonIcon>
+                            수정
+                          </IonItemOption>
+                          <IonItemOption color='danger' onClick={onDelete(item.key)}>
+                            <IonIcon slot='end' icon={trashOutline} />
+                            삭제
+                          </IonItemOption>
+                        </IonItemOptions>
+                      </IonItemSliding>
+                      <>
+                        {i !== sortedData.length - 1 && (
+                          <StyledDistance>
+                            {formatDistance(
+                              new Date(item.startDate),
+                              new Date(sortedData[i + 1].startDate),
+                              {
+                                locale: ko,
+                              },
+                            )}
+                          </StyledDistance>
+                        )}
+                      </>
                     </Fragment>
+
+                    // <Fragment key={i.toString()}>
+                    // <StyledRow>
+                    //   <StyledColumn>{format(new Date(item.startDate), 'HH:mm')}</StyledColumn>
+                    //   <StyledColumn>{Math.ceil(item.duration / 60)} 분</StyledColumn>
+                    //   <StyledColumn>{item.amount} ml</StyledColumn>
+                    // </StyledRow>
+                    // {i !== sortedData.length - 1 && (
+                    //   <StyledDistance>
+                    //     {formatDistance(
+                    //       new Date(item.startDate),
+                    //       new Date(sortedData[i + 1].startDate),
+                    //       {
+                    //         locale: ko,
+                    //       },
+                    //     )}
+                    //   </StyledDistance>
+                    // )}
+                    // </Fragment>
                   )
                 })}
               </StyledTable>
@@ -243,6 +340,7 @@ const StyledHead = styled.div``
 const StyledRow = styled.div`
   display: flex;
   padding: 10px 0;
+  width: 100%;
 `
 
 const StyledColumn = styled.div`
@@ -252,8 +350,7 @@ const StyledColumn = styled.div`
 
 const StyledDistance = styled.div`
   color: #e0a3a3;
-  padding: 0 20px;
-  text-align: center;
+  padding: 0 50px;
 `
 
 export default Main

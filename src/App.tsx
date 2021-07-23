@@ -14,7 +14,7 @@ import {
   useIonAlert,
 } from '@ionic/react'
 import { IonReactRouter } from '@ionic/react-router'
-import { statsChartOutline, waterOutline } from 'ionicons/icons' //medalOutline
+import { speedometerOutline, waterOutline } from 'ionicons/icons' //medalOutline
 import { Main, Milk, Peepoo } from './pages'
 import { encode } from 'js-base64'
 import userAtom from 'src/recoil/user'
@@ -123,8 +123,8 @@ const App: React.FC = () => {
             </IonRouterOutlet>
             <IonTabBar slot='bottom'>
               <IonTabButton tab='main' href='/main'>
-                <IonIcon icon={statsChartOutline} />
-                <IonLabel>통계</IonLabel>
+                <IonIcon icon={speedometerOutline} />
+                <IonLabel>대시보드</IonLabel>
               </IonTabButton>
               <IonTabButton tab='milk' href='/milk'>
                 <IonIcon icon={waterOutline} />

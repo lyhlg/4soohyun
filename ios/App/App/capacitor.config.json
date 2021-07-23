@@ -4,6 +4,6 @@
 	"webDir": "build",
 	"bundledWebRuntime": false,
 	"server": {
-		"url": "http://172.30.1.7:8100"
+		"url": "http://172.30.1.47:8100"
 	}
 }
