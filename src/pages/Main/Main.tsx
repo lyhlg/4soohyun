@@ -63,7 +63,7 @@ const Main: React.FC = () => {
     },
   })
 
-  const [startDate, setStartDate] = useState(new Date().toISOString())
+  const [startDate, setStartDate] = useState<number>(userState.startDate || new Date().getTime())
   // const [endDate, setEndDate] = useState(new Date().toISOString())
   const onChangeStartDate = (e: any): void => {
     e.preventDefault()
@@ -148,7 +148,7 @@ const Main: React.FC = () => {
             <IonDatetime
               display-format='YYYY.MM.DD'
               picker-format='YYYY.MM.DD'
-              value={startDate}
+              value={new Date(startDate).toISOString()}
               onIonChange={onChangeStartDate}
             ></IonDatetime>
           </IonItem>
