@@ -240,9 +240,9 @@ const Milk: React.FC = () => {
                         size='small'
                         shape='round'
                         color='light'
-                        onClick={onAddMilk(30)}
+                        onClick={onAddMilk(10)}
                       >
-                        + 30ml
+                        + 10ml
                       </IonButton>
                     </IonCol>
                     <IonCol>
@@ -251,9 +251,9 @@ const Milk: React.FC = () => {
                         size='small'
                         shape='round'
                         color='light'
-                        onClick={onAddMilk(60)}
+                        onClick={onAddMilk(30)}
                       >
-                        + 60ml
+                        + 30ml
                       </IonButton>
                     </IonCol>
                     <IonCol>

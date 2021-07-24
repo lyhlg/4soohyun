@@ -23,6 +23,7 @@ import {
   useIonAlert,
   useIonViewWillEnter,
   useIonModal,
+  IonSpinner,
 } from '@ionic/react'
 import ko from 'date-fns/locale/ko'
 import { format, formatDistance } from 'date-fns'
@@ -40,6 +41,7 @@ import { RecordMilk } from 'src/components'
 
 const Main: React.FC = () => {
   const userName = useRecoilValue(userSelector.getUserName)
+  const [isLoading, setLoading] = useState(false)
   const [userData, setUserData] = useState<
     { startDate: number; endDate: number; duration: number; amount: number; key: string }[]
   >([])
@@ -100,8 +102,10 @@ const Main: React.FC = () => {
   }, [startDate, userData])
 
   const getUserData = async (): Promise<void> => {
+    setLoading(true)
     const list = await readUserDate(userState.userId)
     setUserData(list)
+    setLoading(false)
   }
 
   const onEdit = (key: string) => () => {
@@ -152,21 +156,12 @@ const Main: React.FC = () => {
               onIonChange={onChangeStartDate}
             ></IonDatetime>
           </IonItem>
-          {/* 
-          <IonItemDivider>
-            <IonLabel>종료일을 선택 해주세요</IonLabel>
-          </IonItemDivider>
-          <IonItem>
-            <IonLabel>종료</IonLabel>
-            <IonDatetime
-              display-format='YYYY.MM.DD'
-              picker-format='YYYY.MM.DD'
-              value={endDate}
-              onIonChange={onChangeEndDate}
-            ></IonDatetime>
-          </IonItem> */}
 
-          {sortedData.length > 0 ? (
+          {isLoading ? (
+            <StyledLoading>
+              <IonSpinner />
+            </StyledLoading>
+          ) : sortedData.length > 0 ? (
             <>
               <IonCard>
                 <IonCardHeader>
@@ -219,21 +214,6 @@ const Main: React.FC = () => {
                   </StyledRow>
                 </StyledHead>
 
-                {/* <IonItemSliding>
-                  <IonItem>
-                    <IonLabel>Sliding Item, Icons End</IonLabel>
-                  </IonItem>
-                  <IonItemOptions>
-                    <IonItemOption color='primary'>
-                      <IonIcon slot='end' icon={createOutline}></IonIcon>
-                      수정
-                    </IonItemOption>
-                    <IonItemOption color='danger'>
-                      <IonIcon slot='end' icon={trashOutline} />
-                      삭제
-                    </IonItemOption>
-                  </IonItemOptions>
-                </IonItemSliding> */}
                 {sortedData?.map((item, i) => {
                   return (
                     <Fragment key={i.toString()}>
@@ -270,25 +250,6 @@ const Main: React.FC = () => {
                         )}
                       </>
                     </Fragment>
-
-                    // <Fragment key={i.toString()}>
-                    // <StyledRow>
-                    //   <StyledColumn>{format(new Date(item.startDate), 'HH:mm')}</StyledColumn>
-                    //   <StyledColumn>{Math.ceil(item.duration / 60)} 분</StyledColumn>
-                    //   <StyledColumn>{item.amount} ml</StyledColumn>
-                    // </StyledRow>
-                    // {i !== sortedData.length - 1 && (
-                    //   <StyledDistance>
-                    //     {formatDistance(
-                    //       new Date(item.startDate),
-                    //       new Date(sortedData[i + 1].startDate),
-                    //       {
-                    //         locale: ko,
-                    //       },
-                    //     )}
-                    //   </StyledDistance>
-                    // )}
-                    // </Fragment>
                   )
                 })}
               </StyledTable>
@@ -351,6 +312,15 @@ const StyledColumn = styled.div`
 const StyledDistance = styled.div`
   color: #e0a3a3;
   padding: 0 50px;
+`
+
+const StyledLoading = styled.div`
+  text-align: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 `
 
 export default Main
